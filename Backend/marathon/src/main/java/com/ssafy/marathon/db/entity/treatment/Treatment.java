@@ -2,20 +2,18 @@ package com.ssafy.marathon.db.entity.treatment;
 
 import com.ssafy.marathon.db.entity.user.Doctor;
 import com.ssafy.marathon.db.entity.user.Patient;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import javax.persistence.*;
-
 import lombok.*;
 
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @Entity
 @Table(name = "treatment")
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Treatment {
 
     @Id
@@ -23,10 +21,10 @@ public class Treatment {
     private Long seq;
     private LocalDate date;
     private LocalTime time;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_seq")
     private Doctor doctor;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_seq")
     private Patient patient;
 }

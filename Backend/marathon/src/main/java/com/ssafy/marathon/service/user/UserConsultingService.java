@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class UserConsultingService {
 
     private final ConsultingRepository consultingRepository;
 
+    @Transactional
     public void createConsulting(ConsultingReqDto consultingReqDto) {
         Consulting consulting = Consulting.builder()
             .birthDate(consultingReqDto.getBirthDate())

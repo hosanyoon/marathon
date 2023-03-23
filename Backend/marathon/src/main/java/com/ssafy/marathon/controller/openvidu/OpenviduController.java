@@ -51,10 +51,10 @@ public class OpenviduController {
         this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
 
         this.recordingProperties = new RecordingProperties.Builder()
-                .outputMode(OutputMode.COMPOSED)
-                .resolution("560x400")
-                .frameRate(30)
-                .build();
+            .outputMode(OutputMode.COMPOSED)
+            .resolution("560x400")
+            .frameRate(30)
+            .build();
     }
 
     /**
@@ -63,18 +63,18 @@ public class OpenviduController {
      */
     @PostMapping("/sessions")
     public ResponseEntity<String> initializeSession(
-            @RequestBody(required = false) Map<String, Object> params,
-            @RequestHeader(required = false, name = "Access-Token") String accessToken)
-            throws OpenViduJavaClientException, OpenViduHttpException {
+        @RequestBody(required = false) Map<String, Object> params,
+        @RequestHeader(required = false, name = "Access-Token") String accessToken)
+        throws OpenViduJavaClientException, OpenViduHttpException {
 
         String role = (accessToken == null) ? "" : jwtTokenProvider.getUserRole(accessToken);
 
         SessionProperties properties = new SessionProperties.Builder()
-                .customSessionId((String) params.get("customSessionId"))
-                .recordingMode(
-                        role.equals("[ROLE_ADMIN]") ? RecordingMode.MANUAL : RecordingMode.ALWAYS)
-                .defaultRecordingProperties(recordingProperties)
-                .build();
+            .customSessionId((String) params.get("customSessionId"))
+            .recordingMode(
+                role.equals("[ROLE_ADMIN]") ? RecordingMode.MANUAL : RecordingMode.ALWAYS)
+            .defaultRecordingProperties(recordingProperties)
+            .build();
 
         Session session = openvidu.createSession(properties);
 
@@ -89,12 +89,12 @@ public class OpenviduController {
      */
     @PostMapping("/sessions/{sessionId}/connections")
     public ResponseEntity<String> createConnection(
-            @PathVariable("sessionId") String sessionId,
-            @RequestBody(required = false) Map<String, Object> params,
-            @RequestHeader(required = false, name = "Access-Token") String accessToken,
-            @RequestHeader(required = false, name = "History-Seq") String historySeq
-            )
-            throws OpenViduJavaClientException, OpenViduHttpException {
+        @PathVariable("sessionId") String sessionId,
+        @RequestBody(required = false) Map<String, Object> params,
+        @RequestHeader(required = false, name = "Access-Token") String accessToken,
+        @RequestHeader(required = false, name = "History-Seq") String historySeq
+    )
+        throws OpenViduJavaClientException, OpenViduHttpException {
 
         Session session = openvidu.getActiveSession(sessionId);
         String role = (accessToken == null) ? "" : jwtTokenProvider.getUserRole(accessToken);
@@ -107,14 +107,14 @@ public class OpenviduController {
         Connection connection = session.createConnection(properties);
 
         if (session.getConnections().size() == 1 &&
-                !(role.equals("[ROLE_DOCTOR]") || role.equals("[ROLE_ADMIN]"))
+            !(role.equals("[ROLE_DOCTOR]") || role.equals("[ROLE_ADMIN]"))
         ) {
             return new ResponseEntity<>("방을 생성할 권한 없음", HttpStatus.UNAUTHORIZED);
         }
 
         if (role.equals("[ROLE_DOCTOR]")) {
             History history = historyRepository.findBySeq(Long.parseLong(historySeq));
-            history.setVideoUrl("https://i8a304.p.ssafy.io" + "/" + "video" + "/" + sessionId + "/" + sessionId + ".mp4");
+            history.updateVideoUrl("https://i8a304.p.ssafy.io" + "/" + "video" + "/" + sessionId + "/" + sessionId + ".mp4");
             System.out.println("--------------------------------------------------------------------------");
             System.out.println(history.getVideoUrl());
             historyRepository.save(history);

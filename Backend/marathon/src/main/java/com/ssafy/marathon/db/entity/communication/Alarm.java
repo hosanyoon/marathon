@@ -6,9 +6,8 @@ import lombok.experimental.SuperBuilder;
 import javax.persistence.*;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 @Entity
 @Table(name = "alarm")

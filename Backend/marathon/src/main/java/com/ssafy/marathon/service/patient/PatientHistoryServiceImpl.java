@@ -3,27 +3,30 @@ package com.ssafy.marathon.service.patient;
 import com.ssafy.marathon.db.entity.treatment.History;
 import com.ssafy.marathon.db.repository.HistoryRepository;
 import com.ssafy.marathon.dto.response.treatment.HistoryResDto;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PatientHistoryServiceImpl implements PatientHistoryService{
+public class PatientHistoryServiceImpl implements PatientHistoryService {
 
     private final HistoryRepository historyRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public Page<HistoryResDto> getHistories(Long patientSeq, int page) {
         List<History> list = historyRepository.findAllByPatient_SeqOrderByDateDesc(patientSeq);
         List<HistoryResDto> resList = new ArrayList<>();
 
-        for (History history:list) {
+        for (History history : list) {
             HistoryResDto historyResDto = HistoryResDto.builder()
                 .historySeq(history.getSeq())
                 .doctorName(history.getDoctor().getName())
@@ -38,16 +41,17 @@ public class PatientHistoryServiceImpl implements PatientHistoryService{
         PageRequest pageRequestForList = PageRequest.of(page, 5);
         int start = (int) pageRequestForList.getOffset();
         int end = Math.min((start + pageRequestForList.getPageSize()), resList.size());
-        Page<HistoryResDto> historyResDtoPage = new PageImpl<>(resList.subList(start, end),
-            pageRequestForList, resList.size());
 
-        return historyResDtoPage;
+        return new PageImpl<>(resList.subList(start, end),
+            pageRequestForList, resList.size());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public HistoryResDto getHistoryDetail(Long historySeq) {
         History history = historyRepository.findBySeq(historySeq);
-        HistoryResDto historyResDto = HistoryResDto.builder()
+
+        return HistoryResDto.builder()
             .doctorName(history.getDoctor().getName())
             .doctorPhone(history.getDoctor().getPhone())
             .doctorImg(history.getDoctor().getImg())
@@ -56,7 +60,5 @@ public class PatientHistoryServiceImpl implements PatientHistoryService{
             .feedback(history.getFeedback())
             .videoUrl(history.getVideoUrl())
             .build();
-
-        return historyResDto;
     }
 }

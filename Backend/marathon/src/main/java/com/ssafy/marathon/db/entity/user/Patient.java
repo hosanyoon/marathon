@@ -1,18 +1,18 @@
 package com.ssafy.marathon.db.entity.user;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "patient")
 public class Patient extends User {
@@ -21,4 +21,11 @@ public class Patient extends User {
     private String mainRelationship;
     private String subPhone;
     private String subRelationship;
+
+    public void updatePatientInfo(String mainPhone, String mainRelationship, String subPhone, String subRelationship) {
+        this.mainPhone = mainPhone;
+        this.mainRelationship = mainRelationship;
+        this.subPhone = subPhone;
+        this.subRelationship = subRelationship;
+    }
 }

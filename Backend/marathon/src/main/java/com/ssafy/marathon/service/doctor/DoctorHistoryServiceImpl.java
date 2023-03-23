@@ -8,14 +8,16 @@ import com.ssafy.marathon.db.repository.TreatmentRepository;
 import com.ssafy.marathon.db.repository.UserRepository;
 import com.ssafy.marathon.dto.request.treatment.HistoryReqDto;
 import com.ssafy.marathon.dto.response.treatment.HistoryResDto;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class DoctorHistoryServiceImpl implements DoctorHistoryService {
     private final TreatmentRepository treatmentRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public Page<HistoryResDto> getNonFeedbackPages(int page, Long doctorSeq) {
 
@@ -53,6 +56,7 @@ public class DoctorHistoryServiceImpl implements DoctorHistoryService {
         return historyResDtoPage;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<HistoryResDto> getFeedbackPages(int page, Long doctorSeq) {
         List<History> list = historyRepository.findAllByDoctor_Seq(doctorSeq);
@@ -81,14 +85,16 @@ public class DoctorHistoryServiceImpl implements DoctorHistoryService {
         return historyResDtoPage;
     }
 
+    @Transactional
     @Override
     public Void writeFeedback(HistoryReqDto historyReqDto) {
         History history = historyRepository.findBySeq(historyReqDto.getHistorySeq());
-        history.setFeedback(historyReqDto.getFeedback());
+        history.updateFeedback(historyReqDto.getFeedback());
         historyRepository.save(history);
         return null;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public HistoryResDto getHistoryDetail(Long historySeq) {
         History history = historyRepository.findBySeq(historySeq);
@@ -109,31 +115,34 @@ public class DoctorHistoryServiceImpl implements DoctorHistoryService {
         return historyResDto;
     }
 
+    @Transactional
     @Override
     public void makeHistory(Long doctorSeq, Long treatmentSeq) {
         Treatment treatment = treatmentRepository.findBySeq(treatmentSeq);
         History history = History.builder()
-                .doctor((Doctor) userRepository.findBySeq(doctorSeq))
-                .patient(treatment.getPatient())
-                .feedback("")
-                .date(treatment.getDate())
-                .time(treatment.getTime())
-                .build();
+            .doctor((Doctor) userRepository.findBySeq(doctorSeq))
+            .patient(treatment.getPatient())
+            .feedback("")
+            .date(treatment.getDate())
+            .time(treatment.getTime())
+            .build();
         historyRepository.save(history);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Long getHistorySeq(Long treatmentSeq) {
         Treatment treatment = treatmentRepository.findBySeq(treatmentSeq);
         History history = historyRepository.findByDoctor_SeqAndPatient_SeqAndDateAndTime(
-                treatment.getDoctor().getSeq(),
-                treatment.getPatient().getSeq(),
-                treatment.getDate(),
-                treatment.getTime()
+            treatment.getDoctor().getSeq(),
+            treatment.getPatient().getSeq(),
+            treatment.getDate(),
+            treatment.getTime()
         );
         return history.getSeq();
     }
 
+    @Transactional(readOnly = true)
     public Page<HistoryResDto> searchPaitentHistory(Long doctorSeq, String name, int page) {
         List<History> list = historyRepository.findAllByDoctor_SeqAndPatient_NameContaining(doctorSeq, name);
 

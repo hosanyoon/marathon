@@ -3,20 +3,19 @@ package com.ssafy.marathon.service.admin;
 import com.ssafy.marathon.db.entity.consulting.Consulting;
 import com.ssafy.marathon.db.repository.ConsultingRepository;
 import com.ssafy.marathon.dto.response.consulting.ConsultingResDto;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AdminConsultingService {
-
     private final ConsultingRepository consultingRepository;
 
     public ConsultingResDto getDetailConsulting(Long consultingSeq) {
@@ -39,7 +38,7 @@ public class AdminConsultingService {
     }
 
     public Page<ConsultingResDto> getConsultingPages(int pageNum, boolean checkedOrder) {
-        PageRequest pageRequest = PageRequest.of(pageNum-1, 10);
+        PageRequest pageRequest = PageRequest.of(pageNum - 1, 10);
 
         Page<ConsultingResDto> consultingResDtoPages;
 
@@ -52,8 +51,7 @@ public class AdminConsultingService {
                     .hopeDate(consulting.getHopeDate())
                     .checked(consulting.isChecked())
                     .build());
-        }
-        else {
+        } else {
             consultingResDtoPages = consultingRepository.findAllByOrderByCheckedAscHopeDateDesc(pageRequest)
                 .map(consulting -> ConsultingResDto.builder()
                     .consultingSeq(consulting.getConsultingSeq())

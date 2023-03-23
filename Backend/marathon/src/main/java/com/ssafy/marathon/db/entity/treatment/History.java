@@ -10,11 +10,10 @@ import javax.persistence.*;
 import lombok.*;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "history")
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class History {
 
@@ -25,10 +24,18 @@ public class History {
     private String videoUrl;
     private LocalDate date;
     private LocalTime time;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_seq")
     private Doctor doctor;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_seq")
     private Patient patient;
+
+    public void updateFeedback(String feedback) {
+        this.feedback = feedback;
+    }
+
+    public void updateVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
 }

@@ -4,27 +4,23 @@ import com.ssafy.marathon.db.entity.communication.Alarm;
 import com.ssafy.marathon.db.entity.treatment.Reservation;
 import com.ssafy.marathon.db.entity.treatment.Treatment;
 import com.ssafy.marathon.db.entity.user.User;
-import com.ssafy.marathon.db.repository.CommunicationRepository;
-import com.ssafy.marathon.db.repository.DoctorRepository;
-import com.ssafy.marathon.db.repository.ReservationRepository;
-import com.ssafy.marathon.db.repository.TreatmentRepository;
-import com.ssafy.marathon.db.repository.UserRepository;
+import com.ssafy.marathon.db.repository.*;
 import com.ssafy.marathon.dto.request.treatment.ReservationReqDto;
 import com.ssafy.marathon.dto.response.treatment.DayOfReservationResDto;
 import com.ssafy.marathon.dto.response.treatment.DayOfTreatmentResDto;
 import com.ssafy.marathon.dto.response.treatment.ReservationResDto;
 import com.ssafy.marathon.util.MilliFunc;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +35,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
 
 
     // 해당 의사의 예약이 몇개인지 반환한다.
+    @Transactional(readOnly = true)
     @Override
     public int countRaws(Long doctorSeq) { // 매개변수로 의사 넣을것
         LocalDate startDate = MilliFunc.getStartDate();
@@ -48,6 +45,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
     }
 
     //    예약이 없는 경우 의사의 예약을 채운다
+    @Transactional
     @Override
     public void makeEmptyReservation(Long doctorSeq) { // 매개변수로 의사 넣을것
         Long milli = MilliFunc.startDayMilliSec();
@@ -58,7 +56,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
             if (0 == reservationRepository.countReservationByDateAndDoctor_Seq(date, doctorSeq)) {
                 Reservation rv = Reservation.builder().date(date).bitDate("00000000")
 //                    doctor받아와야함
-                        .doctor(doctorRepository.findBySeq(doctorSeq)).build();
+                    .doctor(doctorRepository.findBySeq(doctorSeq)).build();
 //                logger.info(rv.toString());
                 reservationRepository.save(rv);
 
@@ -68,6 +66,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
     }
 
     //    각 예약의 정보를 리스트로 만들어 반환한다.
+    @Transactional(readOnly = true)
     @Override
     public List<DayOfReservationResDto> makeReservationList(Long doctorSeq) { // 의사로 바꿀것? seq여도 되는가?
 
@@ -80,8 +79,10 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
             Reservation reservation = reservationRepository.findByDateAndDoctor_Seq(ld, doctorSeq);
 
             DayOfReservationResDto reservationResDto = DayOfReservationResDto.builder()
-                    .reservationSeq(reservation.getSeq()).localDate(reservation.getDate())
-                    .bitDate(reservation.getBitDate()).build();
+                .reservationSeq(reservation.getSeq())
+                .localDate(reservation.getDate())
+                .bitDate(reservation.getBitDate())
+                .build();
             list.add(reservationResDto);
             milli += MilliFunc.DAYMILLIESEC;
         }
@@ -89,6 +90,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
         return list;
     }
 
+    @Transactional
     @Override
     public ReservationResDto makeReservationResDto(Long doctorSeq) {
 
@@ -98,11 +100,14 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
 //        logger.info("test check 2");
 
         ReservationResDto reservationResDto = ReservationResDto.builder()
-                .firstDateInfo(MilliFunc.startDayMilliSec()).list(list).build();
+            .firstDateInfo(MilliFunc.startDayMilliSec())
+            .list(list)
+            .build();
 //        logger.info("test check 3");
         return reservationResDto;
     }
 
+    @Transactional
     @Override
     public void updateReservation(List<ReservationReqDto> list) {
         for (ReservationReqDto dto : list) {
@@ -112,29 +117,30 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
                 continue;
             }
             logger.info("[UPDATE] 의사의 예약 가능 시간 변경 date:{}, before:{}, After:{}", dto.getLocalDate(),
-                    reservation.getBitDate(), dto.getBitDate());
-            reservation.setBitDate(dto.getBitDate());
+                reservation.getBitDate(), dto.getBitDate());
+            reservation.updateBitDate(dto.getBitDate());
             reservationRepository.save(reservation);
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<DayOfTreatmentResDto> getTreatments(Long doctorSeq) {
         List<Treatment> list = treatmentRepository.findByDateBetweenAndDoctor_Seq(
-                        MilliFunc.getStartDate(), MilliFunc.getEndDate(), doctorSeq);
+            MilliFunc.getStartDate(), MilliFunc.getEndDate(), doctorSeq);
         List<DayOfTreatmentResDto> dtoList = new ArrayList<>();
 
         for (Treatment treatment : list) {
             LocalDateTime dateTime = LocalDateTime.of(treatment.getDate(),
-                    treatment.getTime()); // Treatment바꾸기
+                treatment.getTime()); // Treatment바꾸기
 
             DayOfTreatmentResDto dayOfTreatmentResDto = DayOfTreatmentResDto.builder()
-                    .treatmentSeq(treatment.getSeq())
-                    .patientName(treatment.getPatient().getName())
-                    .dateTime(dateTime)
-                    .day(dateTime.getDayOfWeek().toString())
-                    .patientImg(treatment.getPatient().getImg())
-                    .build();
+                .treatmentSeq(treatment.getSeq())
+                .patientName(treatment.getPatient().getName())
+                .dateTime(dateTime)
+                .day(dateTime.getDayOfWeek().toString())
+                .patientImg(treatment.getPatient().getImg())
+                .build();
 
             dtoList.add(dayOfTreatmentResDto);
         }
@@ -142,6 +148,7 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
         return dtoList;
     }
 
+    @Transactional
     @Override
     public void cancelTreatment(Long treatmentSeq) {
         Optional<Treatment> findTreatment = treatmentRepository.findById(treatmentSeq);
@@ -160,27 +167,29 @@ public class DoctorTreatmentServiceImpl implements DoctorTreatmentService {
             if (arr[i].equals(treatment.getTime().toString())) sb.append('1');
             else sb.append(oldBitdate.charAt(i));
         }
-        reservation.setBitDate(sb.toString());
+        reservation.updateBitDate(sb.toString());
         reservationRepository.save(reservation);
 
         treatmentRepository.delete(treatment);
     }
 
+    @Transactional
     @Override
     public boolean makeAlarm(Long treatmentSeq, String sessionId, Long doctorSeq) {
         User receiver = userRepository.findBySeq(treatmentRepository.findBySeq(treatmentSeq).getPatient().getSeq());
         User sender = userRepository.findBySeq(doctorSeq);
 
         Alarm alarm = Alarm.builder()
-                .link(sessionId)
-                .receiver(receiver)
-                .sender(sender)
-                .checked(false)
-                .dateTime(LocalDateTime.now())
-                .build();
+            .link(sessionId)
+            .receiver(receiver)
+            .sender(sender)
+            .checked(false)
+            .dateTime(LocalDateTime.now())
+            .build();
         return communicationRepository.save(alarm) != null;
     }
 
+    @Transactional
     @Override
     public void deleteTreatment(Long treatmentSeq) {
         Optional<Treatment> findTreatment = treatmentRepository.findById(treatmentSeq);

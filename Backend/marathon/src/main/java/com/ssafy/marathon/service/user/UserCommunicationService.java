@@ -12,20 +12,19 @@ import com.ssafy.marathon.dto.request.communication.MessageReqDto;
 import com.ssafy.marathon.dto.response.communication.CommunicationResDto;
 import com.ssafy.marathon.dto.response.communication.UserCommuCntResDto;
 import com.ssafy.marathon.dto.response.user.UserResDto;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class UserCommunicationService {
 
@@ -38,6 +37,7 @@ public class UserCommunicationService {
     private final String doctor = "[ROLE_DOCTOR]";
     private final String patient = "[ROLE_PATIENT]";
 
+    @Transactional
     public void sendMessage(Long senderSeq, MessageReqDto messageReqDto) {
         Optional<User> findSender = userRepository.findById(senderSeq);
         User sender = findSender.orElseThrow();
@@ -55,28 +55,26 @@ public class UserCommunicationService {
         communicationRepository.save(message);
     }
 
+    @Transactional(readOnly = true)
     public Page<CommunicationResDto> getCommunicationPages(Long userSeq, int pageNum) {
         Optional<User> findUser = userRepository.findById(userSeq);
         User user = findUser.orElseThrow();
 
         PageRequest pageRequest = PageRequest.of(pageNum - 1, 5);
 
-        Page<CommunicationResDto> communicationResDtoPages = communicationRepository.findAllByReceiverOrderByCheckedAscDateTimeDesc(
-                user, pageRequest)
+        return communicationRepository.findAllByReceiverOrderByCheckedAscDateTimeDesc(user, pageRequest)
             .map(communication -> CommunicationResDto.builder()
                 .commuSeq(communication.getSeq())
                 .senderSeq(communication.getSender().getSeq())
                 .senderName(communication.getSender().getName())
                 .date(communication.getDateTime())
                 .checked(communication.getChecked())
-                .link(communication.getClass() == Alarm.class ? ((Alarm) communication).getLink()
-                    : null)
-                .content(communication.getClass() == Message.class
-                    ? ((Message) communication).getContent() : null)
+                .link(communication.getClass() == Alarm.class ? ((Alarm) communication).getLink() : null)
+                .content(communication.getClass() == Message.class ? ((Message) communication).getContent() : null)
                 .build());
-        return communicationResDtoPages;
     }
 
+    @Transactional(readOnly = true)
     public void UpdateCheck(Long commuSeq) {
         Optional<Communication> findCommunication = communicationRepository.findById(commuSeq);
         Communication communication = findCommunication.orElseThrow();
@@ -84,9 +82,8 @@ public class UserCommunicationService {
         communication.changeChecked();
     }
 
-    public List<UserResDto> findCanSendMessageUsers(Long userSeq, String userRole, boolean isNew,
-        Long commuSeq) {
-
+    @Transactional(readOnly = true)
+    public List<UserResDto> findCanSendMessageUsers(Long userSeq, String userRole, boolean isNew, Long commuSeq) {
         List<UserResDto> userResDtoList = new ArrayList<>();
 
         if (!isNew) {
@@ -154,22 +151,23 @@ public class UserCommunicationService {
         }
 
         return userResDtoList.stream()
-                .distinct()
-                .collect(Collectors.toList());
+            .distinct()
+            .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public UserCommuCntResDto countUncheckedCommunication(Long userSeq) {
         Optional<User> findUser = userRepository.findById(userSeq);
         User user = findUser.orElseThrow();
 
         int count = communicationRepository.countByReceiverAndCheckedIsFalse(user);
 
-        UserCommuCntResDto userCommuCntResDto = UserCommuCntResDto.builder()
+        return UserCommuCntResDto.builder()
             .count(count)
             .build();
-        return userCommuCntResDto;
     }
 
+    @Transactional
     public void deleteCommunication(Long commuSeq) {
         Optional<Communication> findCommunication = communicationRepository.findById(commuSeq);
         Communication communication = findCommunication.orElseThrow();

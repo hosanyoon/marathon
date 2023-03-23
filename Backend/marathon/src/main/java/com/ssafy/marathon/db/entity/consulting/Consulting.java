@@ -12,11 +12,10 @@ import java.time.LocalDateTime;
 import org.springframework.lang.Nullable;
 
 @Getter
-@Setter
 @Entity
 @Table(name = "consulting")
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class Consulting {
 

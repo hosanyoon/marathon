@@ -15,9 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class EmailServiceImpl {
 
     private final UserRepository userRepository;
@@ -25,6 +24,7 @@ public class EmailServiceImpl {
     private final PasswordEncoder passwordEncoder;
     private final Logger LOGGER = LoggerFactory.getLogger(UserSignController.class);
 
+    @Transactional(readOnly = true)
     public void sendEmailToFindId(String email) {
         User user = (User) userRepository.findByEmail(email).get();
         String id = user.getId();
@@ -41,6 +41,7 @@ public class EmailServiceImpl {
         LOGGER.info("[sendEmail] 이메일 전송 완료");
     }
 
+    @Transactional
     public void sendEmailToFindPassword(IdEmailDto idEmailDto) throws Exception {
         LOGGER.info("[sendEmailToFindPassword] 검색할 아이디 : {}, 이메일 : {}",idEmailDto.getId(), idEmailDto.getEmail());
         User user = userRepository.getById(idEmailDto.getId());
@@ -52,13 +53,12 @@ public class EmailServiceImpl {
         LOGGER.info("[sendEmailToFindPassword] 임시 비밀번호 생성 시작");
         String NewPassword = createPassword();
         String str = passwordEncoder.encode(NewPassword);
-        user.setPassword(passwordEncoder.encode(NewPassword));
+        user.updateUserPassword(passwordEncoder.encode(NewPassword));
         LOGGER.info("[sendEmailToFindId] 임시 비밀번호 생성 완료 pw : {}", NewPassword);
         LOGGER.info("[sendEmailToFindId] 임시 비밀번호 생성 완료 pw : {}", str);
         LOGGER.info("[sendEmailToFindId] 이메일 전송 시작");
         String subject = "[Marathon] 임시 비밀번호";
         String text = user.getName() + "회원님의 임시 비밀번호는 " + NewPassword + " 입니다. ";
-        System.out.println(text);
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setTo(idEmailDto.getEmail());
         msg.setSubject(subject);

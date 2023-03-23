@@ -1,22 +1,20 @@
 package com.ssafy.marathon.service.admin;
 
-import com.ssafy.marathon.config.security.JwtTokenProvider;
 import com.ssafy.marathon.db.entity.board.Board;
 import com.ssafy.marathon.db.repository.BoardRepository;
 import com.ssafy.marathon.dto.request.board.BoardReqDto;
-import java.time.LocalDateTime;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AdminBoardService {
-
     private final BoardRepository boardRepository;
-
 
     public void writeBoard(BoardReqDto boardReqDto) {
         Board board = Board.builder()
@@ -32,8 +30,7 @@ public class AdminBoardService {
         Optional<Board> findBoard = boardRepository.findById(boardSeq);
 
         Board board = findBoard.orElseThrow();
-        board.setContent(boardReqDto.getContent());
-        board.setTitle(boardReqDto.getTitle());
+        board.updateBoard(boardReqDto.getContent(), boardReqDto.getTitle());
     }
 
     public void deleteBoard(Long boardSeq) {

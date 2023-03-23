@@ -1,18 +1,17 @@
 package com.ssafy.marathon.db.entity.treatment;
 
 import com.ssafy.marathon.db.entity.user.Doctor;
-import java.time.LocalDate;
-import javax.persistence.*;
-
 import lombok.*;
 
+import javax.persistence.*;
+import java.time.LocalDate;
+
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @Entity
 @Table(name = "reservation")
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Reservation {
 
     @Id
@@ -23,7 +22,11 @@ public class Reservation {
 
     private String bitDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_seq")
     private Doctor doctor;
+
+    public void updateBitDate(String bitDate) {
+        this.bitDate = bitDate;
+    }
 }

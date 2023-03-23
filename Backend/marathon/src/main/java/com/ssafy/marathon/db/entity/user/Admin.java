@@ -1,16 +1,15 @@
 package com.ssafy.marathon.db.entity.user;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import javax.persistence.*;
-import org.hibernate.annotations.DynamicInsert;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 @Entity
 @Table(name = "admin")
